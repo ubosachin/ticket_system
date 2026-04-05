@@ -10,96 +10,83 @@ tags:
   - openenv
 ---
 
-# Ticket System Support Environment
+# 🎫 Ticket System Support Environment
 
-A real-world OpenEnv environment simulating a customer support representative's workflow. This environment allows AI agents to learn how to triage tickets, search for customer information, check order statuses, and resolve issues like password resets or refunds.
+A real-world **OpenEnv** environment simulating a professional customer support representative's workflow. This environment allows AI agents to learn how to triage tickets, search customer databases, check order statuses, and resolve complex issues like password resets or defective-item refunds.
 
-## Environment Overview
+---
 
-In this environment, an agent takes on the role of a support representative. The environment provides a series of tasks with increasing difficulty. Success is measured by how accurately and efficiently the agent resolves the customer's request.
+## 🚀 Getting Started (Zero-Knowledge Guide)
 
-### Motivation
-Customer support is a high-impact real-world task for AI agents. This environment provides a controlled but realistic space to evaluate an agent's ability to:
-1. **Understand** natural language support tickets.
-2. **Interact** with simulated internal tools (databases).
-3. **Execute** multi-step logic (e.g., verify order -> check status -> issue refund).
-4. **Communicate** effectively with the customer to resolve the issue.
+If you are new to OpenEnv, follow these simple steps to get this environment running and testing your first AI agent.
 
-## Action Space
+### 1. Local Setup
+Ensure you have **Python 3.10+** installed, then run:
 
-The agent interacts using `TicketSystemAction` which includes:
-- `action_type`: One of `read_ticket`, `search_orders`, `get_order_status`, `issue_refund`, `reply_and_resolve`.
-- `customer_id`: Used with `search_orders`.
-- `order_id`: Used with `get_order_status` or `issue_refund`.
-- `message`: Used with `reply_and_resolve` to communicate with the customer.
-
-## Observation Space
-
-The `TicketSystemObservation` provides:
-- `system_feedback`: Result of the last action (e.g., "Found order: ORD-789").
-- `current_ticket_text`: The text of the active support ticket.
-- `ticket_resolved`: Boolean indicating if the ticket is closed.
-- `orders_found`: List of orders associated with a customer.
-- `order_status`: Status of a specific order (e.g., "Shipped", "Delivered").
-- `refund_issued`: Boolean indicating if a refund was processed.
-
-## Tasks
-
-| Task ID | Difficulty | Objective |
-|---------|------------|-----------|
-| **easy** | Easy | Resolve a simple password reset query. |
-| **medium** | Medium | Find a customer's order and report its shipping status. |
-| **hard** | Hard | Process a refund for a broken item after verifying the order. |
-
-## Reward Function
-
-The environment uses a shaped reward function (0.0 to 1.0) to provide feedback on partial progress:
-- **0.05**: For reading the ticket.
-- **0.20**: For correctly searching for customer orders (Medium/Hard).
-- **0.20**: For correctly checking order status (Medium/Hard).
-- **0.30**: For successfully issuing a refund (Hard).
-- **Final**: The remaining reward (up to 1.0) is granted when the ticket is successfully resolved with the correct information.
-
-## Setup and Usage
-
-### Prerequisites
-- Docker
-- Python 3.9+
-- `openenv-core` (`pip install openenv-core`)
-
-### Build the Environment
 ```bash
-docker build -t ticket_system:latest -f server/Dockerfile .
+# Clone the repository
+git clone https://github.com/ubosachin/ticket_system.git
+cd ticket_system
+
+# Create and activate a virtual environment
+python -m venv venv
+source venv/bin/activate  # Mac/Linux (or venv\Scripts\activate on Windows)
+
+# Install required tools
+pip install openenv-core openai pydantic
 ```
 
-### Run Locally
+### 2. Configure Your AI "Brain"
+The environment needs an AI model to act as the agent. Set your Hugging Face token and model choice:
 ```bash
-docker run -p 8000:8000 ticket_system:latest
-```
-
-### Run Inference Baseline
-To run the baseline agent against the environment:
-```bash
-export API_BASE_URL="https://router.huggingface.co/v1"
+export HF_TOKEN="your_huggingface_token"
 export MODEL_NAME="Qwen/Qwen2.5-72B-Instruct"
-export HF_TOKEN="your-hf-token"
-export MY_ENV_TASK="easy"
-python3 inference.py
+export MY_ENV_TASK="easy"  # Difficulty: easy, medium, or hard
 ```
 
-## Baseline Scores
+### 3. Run the Evaluation
+Launch the automated support agent to see it solve tasks in real-time:
+```bash
+python inference.py
+```
 
-| Task | Score (Agent) | Success Rate |
-|------|---------------|--------------|
-| Easy | 1.00 | 100% |
-| Medium | 1.00 | 100% |
-| Hard | 1.00 | 100% |
+---
 
-*Scores based on Qwen 2.5 72B Instruct baseline.*
+## 🛠️ How It Works
 
-## OpenEnv Compliance
-This environment fully implements the OpenEnv specification:
-- ✅ Typed Pydantic models for Actions/Observations.
-- ✅ Full `step()`, `reset()`, `state()` API.
-- ✅ `openenv.yaml` manifest.
-- ✅ Programmatic graders via internal reward logic.
+### The Workflow
+1.  **Initialization**: The environment resets and assigns the agent a specific support ticket (e.g., "I need a refund for my broken laptop").
+2.  **Tool Usage**: The agent uses actions like `INFO_SEARCH` to query a mock database of orders (`ORDERS_DB`).
+3.  **Grading**: A programmatic **Rubric** evaluates every step. The agent earns partial rewards for intermediate successes (like finding a tracking ID) and a full reward (1.0) for resolving the ticket correctly.
+
+### Difficulty Levels
+| Level | Task | Objective |
+| :--- | :--- | :--- |
+| **Easy** | Password Reset | Provide instructions for a standard password reset request. |
+| **Medium** | Order Status | Correct customers' tracking queries using database lookups. |
+| **Hard** | Damaged Goods | Verify the order, process a refund, and reply to the customer. |
+
+---
+
+## 📊 Action & Observation Space
+
+### Actions (`TicketSystemAction`)
+- `action_type`: `INFO_SEARCH`, `REFUND_PROCESS`, or `MESSAGE_CUSTOMER`.
+- `customer_id` / `order_id`: Database query parameters.
+- `message`: The agent's final text response to the user.
+
+### Observations (`TicketSystemObservation`)
+- `system_feedback`: Results from database queries or system actions.
+- `current_ticket_text`: The customer's original complaint.
+- `reward`: The current performance score (0.0 to 1.0).
+- `done`: Set to `True` when the ticket is successfully resolved.
+
+---
+
+## 🌐 Online Access
+You can test this environment manually through the web interface on Hugging Face:
+**[https://huggingface.co/spaces/ubosachin/ticket_system](https://huggingface.co/spaces/ubosachin/ticket_system)**
+
+---
+
+*Built for the Meta OpenEnv Hackathon 2026.*
