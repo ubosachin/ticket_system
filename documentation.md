@@ -85,4 +85,57 @@ The `inference.py` script serves as the baseline auditor. It:
 
 ---
 
-*This environment is designed for the Meta OpenEnv hackathon, focusing on robust tool usage and multi-step reasoning capabilities.*
+## 7. Getting Started (For Beginners)
+
+If you have zero knowledge of OpenEnv, follow these simple steps to get this environment running and testing your first AI agent.
+
+### A. Local Setup (Installing the Tools)
+1.  **Install Python**: Ensure you have Python 3.10+ installed.
+2.  **Clone the Repo**:
+    ```bash
+    git clone https://github.com/ubosachin/ticket_system.git
+    cd ticket_system
+    ```
+3.  **Create a Virtual Environment**:
+    ```bash
+    python -m venv venv
+    source venv/bin/activate  # Mac/Linux
+    # OR: venv\Scripts\activate (Windows)
+    ```
+4.  **Install Dependencies**:
+    ```bash
+    pip install openenv-core openai pydantic
+    ```
+
+### B. Configuring Your Credentials
+The environment needs to know how to talk to an AI model (like GPT-4 or Qwen). Set these variables in your terminal:
+```bash
+export HF_TOKEN="your_huggingface_write_token"
+export MODEL_NAME="Qwen/Qwen2.5-72B-Instruct"
+export MY_ENV_TASK="easy"  # Change to "medium" or "hard" as you progress
+```
+
+### C. Running Your First Test (Baseline Audit)
+The `inference.py` script is the main "brain" that runs the simulation. To start the agent:
+```bash
+python inference.py
+```
+**What happens when you run this?**
+- It creates a "Support Assistant" agent.
+- It resets the ticket system and gives the agent a new customer problem.
+- It loops automatically, performing actions and giving you live progress logs.
+
+### D. Using the Hugging Face Web Interface
+You can also test the environment **without writing code**!
+1.  Go to: **[https://huggingface.co/spaces/ubosachin/ticket_system](https://huggingface.co/spaces/ubosachin/ticket_system)**
+2.  On the **App** tab, you will see a UI.
+3.  You can manually enter **Action Type**, **Customer ID**, and **Message** to see how the system responds.
+
+---
+
+## 8. Summary of Use
+- **Goal**: Help the customer solve their issue.
+- **Workflow**: `Reset (Get Ticket)` -> `Step (Search DB)` -> `Step (Reply/Process)` -> `Done`.
+- **Measurement**: Your success is measured by the `reward` (from 0.0 to 1.0) shown in the logs.
+
+*Happy Coding! For any issues, refer to the [OpenEnv Spec](https://github.com/meta-pytorch/openenv).*
