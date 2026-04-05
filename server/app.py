@@ -36,11 +36,13 @@ except Exception as e:  # pragma: no cover
     ) from e
 
 try:
-    from ..models import TicketSystemAction, TicketSystemObservation
-    from .ticket_system_environment import TicketSystemEnvironment
-except ModuleNotFoundError:
+    # First try absolute imports (standard when running from root)
     from models import TicketSystemAction, TicketSystemObservation
     from server.ticket_system_environment import TicketSystemEnvironment
+except (ImportError, ModuleNotFoundError):
+    # Fallback for local testing or different contexts
+    from ..models import TicketSystemAction, TicketSystemObservation
+    from .ticket_system_environment import TicketSystemEnvironment
 
 
 # Create the app with web interface and README integration

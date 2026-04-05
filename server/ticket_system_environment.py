@@ -5,9 +5,11 @@ from openenv.core.env_server.interfaces import Environment
 from openenv.core.env_server.types import State
 
 try:
-    from ..models import TicketSystemAction, TicketSystemObservation
-except ImportError:
+    # First try absolute imports (standard when running from root)
     from models import TicketSystemAction, TicketSystemObservation
+except (ImportError, ModuleNotFoundError):
+    # Fallback to relative imports if needed
+    from ..models import TicketSystemAction, TicketSystemObservation
 
 # Database for the environment
 ORDERS_DB = {
