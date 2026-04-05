@@ -1,0 +1,20 @@
+spec_version: 1
+name: ticket_system
+description: "A real-world simulation of a customer support ticketing system where agents must resolve queries ranging from password resets to complex refund processing."
+version: "1.0.0"
+type: space
+runtime: fastapi
+app: server.app:app
+port: 8000
+
+tasks:
+  - id: easy
+    description: "Password Reset: Help a customer who forgot their password."
+    difficulty: "easy"
+  - id: medium
+    description: "Order Tracking: Provide shipping status for a specific customer."
+    difficulty: "medium"
+  - id: hard
+    description: "Refund Process: Identify a damaged item and issue a refund."
+    difficulty: "hard"
+
