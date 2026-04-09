@@ -18,3 +18,5 @@ class TicketSystemObservation(Observation):
     orders_found: str = Field(default="", description="JSON string of orders found")
     order_status: str = Field(default="", description="Status of the queried order")
     refund_issued: bool = Field(default=False, description="Whether a refund was successfully issued")
+    task: str = Field(default="easy", description="The name of the current task")
+    step: int = Field(default=0, description="The current step number")

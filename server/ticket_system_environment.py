@@ -83,6 +83,8 @@ class TicketSystemEnvironment(Environment):
             refund_issued=self.refund_issued,
             reward=reward,
             done=done,
+            task=self.task_name,
+            step=self._state.step_count,
             metadata={"step": self._state.step_count, "task": self.task_name}
         )
 
