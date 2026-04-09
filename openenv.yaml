@@ -11,10 +11,13 @@ tasks:
   - id: easy
     description: "Password Reset: Help a customer who forgot their password."
     difficulty: "easy"
+    grader: true
   - id: medium
     description: "Order Tracking: Provide shipping status for a specific customer."
     difficulty: "medium"
+    grader: true
   - id: hard
     description: "Refund Process: Identify a damaged item and issue a refund."
     difficulty: "hard"
+    grader: true
 

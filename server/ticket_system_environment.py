@@ -37,7 +37,7 @@ class TicketSystemEnvironment(Environment):
         self.orders_found = ""
         self.order_status = ""
         self.system_feedback = "Welcome to the Ticket Support System."
-        self.max_reward = 1.0
+        self.max_reward = 0.99
         self.current_reward = 0.0
 
         if self.task_name == "easy":

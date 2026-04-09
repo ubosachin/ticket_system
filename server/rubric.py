@@ -46,15 +46,15 @@ class TicketSystemRubric(Rubric):
             self.ticket_resolved = True
             if task_name == "easy":
                 if "password" in msg_lower or "link" in msg_lower or "reset" in msg_lower:
-                    reward = 1.0 - self.current_reward
+                    reward = 0.99 - self.current_reward
             elif task_name == "medium":
                 if "shipped" in msg_lower or "ord-789" in msg_lower:
-                    reward = 1.0 - self.current_reward
+                    reward = 0.99 - self.current_reward
             elif task_name == "hard":
                 if self.refund_issued and ("refund" in msg_lower or "ord-111" in msg_lower):
-                    reward = 1.0 - self.current_reward
+                    reward = 0.99 - self.current_reward
         
         # Maximize and clamp reward
-        actual_reward = max(0.0, min(reward, 1.0 - self.current_reward))
+        actual_reward = max(0.0, min(reward, 0.99 - self.current_reward))
         self.current_reward += actual_reward
         return actual_reward
