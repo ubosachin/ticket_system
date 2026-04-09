@@ -23,6 +23,8 @@ class TicketSystemEnv(EnvClient[TicketSystemAction, TicketSystemObservation, Sta
             orders_found=obs_data.get("orders_found", ""),
             order_status=obs_data.get("order_status", ""),
             refund_issued=obs_data.get("refund_issued", False),
+            task=obs_data.get("task", "easy"),
+            step=obs_data.get("step", 0),
             done=payload.get("done", False),
             reward=payload.get("reward"),
             metadata=obs_data.get("metadata", {}),
