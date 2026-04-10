@@ -9,14 +9,17 @@ port: 8000
 
 tasks:
   - id: easy
+    name: "Password Reset"
     description: "Password Reset: Help a customer who forgot their password."
     difficulty: "easy"
     grader: true
   - id: medium
+    name: "Order Tracking"
     description: "Order Tracking: Provide shipping status for a specific customer."
     difficulty: "medium"
     grader: true
   - id: hard
+    name: "Refund Processing"
     description: "Refund Process: Identify a damaged item and issue a refund."
     difficulty: "hard"
     grader: true

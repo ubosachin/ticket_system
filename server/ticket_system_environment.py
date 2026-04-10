@@ -23,8 +23,8 @@ class TicketSystemEnvironment(Environment):
     SUPPORTS_CONCURRENT_SESSIONS: bool = True
 
     def __init__(self):
-        super().__init__() # Ensure base class init is called
         self.rubric = TicketSystemRubric()
+        super().__init__(rubric=self.rubric)
         self._state = State(episode_id=str(uuid4()), step_count=0)
         self.task_name = os.getenv("MY_ENV_TASK", "easy")
         self.reset_env()
@@ -38,7 +38,7 @@ class TicketSystemEnvironment(Environment):
         self.order_status = ""
         self.system_feedback = "Welcome to the Ticket Support System."
         self.max_reward = 0.99
-        self.current_reward = 0.0
+        self.current_reward = 0.01
 
         if self.task_name == "easy":
             self.current_ticket_text = "I forgot my password, my username is CUST-123. Can you help?"
@@ -71,9 +71,11 @@ class TicketSystemEnvironment(Environment):
         self._state = State(episode_id=episode_id or str(uuid4()), step_count=0)
         self.reset_env()
         self._reset_rubric()
-        return self._make_obs()
+        # Ensure the rubric matches the environment's initial reward
+        self.rubric.current_reward = self.current_reward
+        return self._make_obs(reward=self.current_reward)
 
-    def _make_obs(self, reward=0.0, done=False):
+    def _make_obs(self, reward=0.01, done=False):
         return TicketSystemObservation(
             system_feedback=self.system_feedback,
             current_ticket_text=self.current_ticket_text,

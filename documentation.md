@@ -20,15 +20,17 @@ The environment is built using the **OpenEnv Core** framework and consists of se
 ### B. Programmatic Rubric (`server/rubric.py`)
 - **Grading Logic**: Evaluates agent performance after every step.
 - **Reward Signals**:
+  - `0.01` baseline reward for starting the task (ensures non-zero score).
   - `0.05` for reading the ticket.
-  - `0.2` for searching the correct customer ID.
-  - `0.2` for correctly identifying order status.
+  - `0.20` for searching for orders.
+  - `0.20` for getting order status.
+  - `0.30` for issuing a refund (Hard task).
   - `0.99` total max score for successfully resolving the ticket (strictly below 1.0).
   - `-0.1` penalty for invalid actions or malformed JSON.
 
 ### C. Models (`models.py`)
 - **TicketSystemAction**: Defines the schema for agent clicks and messages.
-  - `action_type`: `INFO_SEARCH` (search DB), `REFUND_PROCESS` (issue refund), `MESSAGE_CUSTOMER` (reply and resolve).
+  - `action_type`: `read_ticket`, `search_orders`, `get_order_status`, `issue_refund`, `reply_and_resolve`.
   - `customer_id` / `order_id`: Query parameters for database lookups.
   - `message`: Final response to the customer.
 - **TicketSystemObservation**: What the agent "sees" back from the system (system feedback, order status, ticket text).
@@ -137,6 +139,6 @@ You can also test the environment **without writing code**!
 ## 8. Summary of Use
 - **Goal**: Help the customer solve their issue.
 - **Workflow**: `Reset (Get Ticket)` -> `Step (Search DB)` -> `Step (Reply/Process)` -> `Done`.
-- **Measurement**: Your success is measured by the `reward` (from 0.0 to 1.0) shown in the logs.
+- **Measurement**: Your success is measured by the `reward` (strictly between 0.0 and 1.0) shown in the logs.
 
 *Happy Coding! For any issues, refer to the [OpenEnv Spec](https://github.com/meta-pytorch/openenv).*

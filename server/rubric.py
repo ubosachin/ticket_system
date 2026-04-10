@@ -9,7 +9,7 @@ class TicketSystemRubric(Rubric):
         self.reset()
         
     def reset(self):
-        self.current_reward = 0.0
+        self.current_reward = 0.01
         self.refund_issued = False
         self.ticket_resolved = False
 
