@@ -20,5 +20,5 @@ class TicketSystemObservation(Observation):
     refund_issued: bool = Field(default=False, description="Whether a refund was successfully issued")
     task: str = Field(default="easy", description="The name of the current task")
     step: int = Field(default=0, description="The current step number")
-    reward: float = Field(default=0.1, description="Current reward value")
+    reward: float = Field(default=0.2, description="Current reward value")
     done: bool = Field(default=False, description="Whether the episode is finished")

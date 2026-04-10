@@ -37,8 +37,8 @@ class TicketSystemEnvironment(Environment):
         self.orders_found = ""
         self.order_status = ""
         self.system_feedback = "Welcome to the Ticket Support System."
-        self.max_reward = 0.9
-        self.current_reward = 0.1
+        self.max_reward = 0.95
+        self.current_reward = 0.2
 
         if self.task_name == "easy":
             self.current_ticket_text = "I forgot my password, my username is CUST-123. Can you help?"
@@ -47,8 +47,9 @@ class TicketSystemEnvironment(Environment):
         elif self.task_name == "hard":
             self.current_ticket_text = "I received a broken item for my recent order. I am CUST-999. I want a refund."
         else:
-            self.current_ticket_text = "Unknown task."
+            # Default fallback
             self.task_name = "easy"
+            self.current_ticket_text = "I forgot my password, my username is CUST-123. Can you help?"
 
     def reset(
         self,
@@ -75,7 +76,7 @@ class TicketSystemEnvironment(Environment):
         self.rubric.current_reward = self.current_reward
         return self._make_obs(reward=self.current_reward)
 
-    def _make_obs(self, reward=0.1, done=False):
+    def _make_obs(self, reward=0.2, done=False):
         return TicketSystemObservation(
             system_feedback=self.system_feedback,
             current_ticket_text=self.current_ticket_text,
@@ -154,10 +155,11 @@ class TicketSystemEnvironment(Environment):
             done = True
             
         else:
-            self.system_feedback = "Invalid action_type."
+            self.system_feedback = f"Invalid action_type: {action.action_type}"
 
         # Grading logic using the rubric
         reward = self._apply_rubric(action, self._make_obs(reward=0.0, done=done))
+        # Environment's current_reward tracks total for state consistency
         self.current_reward += reward
 
         if self._state.step_count >= 10:

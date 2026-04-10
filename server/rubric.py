@@ -9,7 +9,7 @@ class TicketSystemRubric(Rubric):
         self.reset()
         
     def reset(self):
-        self.current_reward = 0.1
+        self.current_reward = 0.2
         self.refund_issued = False
         self.ticket_resolved = False
         self.read_ticket_rewarded = False
@@ -20,7 +20,9 @@ class TicketSystemRubric(Rubric):
         # Grader logic matching the environment task configuration
         task_name = observation.metadata.get("task", "easy")
         action_type = action.action_type
-        msg_lower = action.message.lower()
+        # Handle cases where message might be empty or missing
+        msg = getattr(action, "message", "")
+        msg_lower = msg.lower() if msg else ""
         
         reward = 0.0
         
@@ -52,15 +54,15 @@ class TicketSystemRubric(Rubric):
             self.ticket_resolved = True
             if task_name == "easy":
                 if "password" in msg_lower or "link" in msg_lower or "reset" in msg_lower:
-                    reward = 0.9 - self.current_reward
+                    reward = 0.95 - self.current_reward
             elif task_name == "medium":
                 if "shipped" in msg_lower or "ord-789" in msg_lower:
-                    reward = 0.9 - self.current_reward
+                    reward = 0.95 - self.current_reward
             elif task_name == "hard":
                 if self.refund_issued and ("refund" in msg_lower or "ord-111" in msg_lower):
-                    reward = 0.9 - self.current_reward
+                    reward = 0.95 - self.current_reward
         
         # Maximize and clamp reward
-        actual_reward = max(0.0, min(reward, 0.9 - self.current_reward))
+        actual_reward = max(0.0, min(reward, 0.95 - self.current_reward))
         self.current_reward += actual_reward
         return actual_reward
