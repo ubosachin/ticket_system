@@ -129,7 +129,7 @@ async def main() -> None:
         obs = res_reset if not hasattr(res_reset, "observation") else res_reset.observation
         done = res_reset.done if hasattr(res_reset, "done") else False
             
-        last_reward = res_reset.reward if hasattr(res_reset, "reward") else 0.0
+        last_reward = res_reset.reward if hasattr(res_reset, "reward") else 0.1
         rewards.append(last_reward)
 
         for step in range(1, MAX_STEPS + 1):

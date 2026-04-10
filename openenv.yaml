@@ -2,7 +2,7 @@ spec_version: 1
 name: ticket_system
 description: "A real-world simulation of a customer support ticketing system where agents must resolve queries ranging from password resets to complex refund processing."
 version: "1.0.0"
-type: space
+type: env
 runtime: fastapi
 app: server.app:app
 port: 8000

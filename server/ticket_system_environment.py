@@ -37,8 +37,8 @@ class TicketSystemEnvironment(Environment):
         self.orders_found = ""
         self.order_status = ""
         self.system_feedback = "Welcome to the Ticket Support System."
-        self.max_reward = 0.99
-        self.current_reward = 0.01
+        self.max_reward = 0.9
+        self.current_reward = 0.1
 
         if self.task_name == "easy":
             self.current_ticket_text = "I forgot my password, my username is CUST-123. Can you help?"
@@ -75,7 +75,7 @@ class TicketSystemEnvironment(Environment):
         self.rubric.current_reward = self.current_reward
         return self._make_obs(reward=self.current_reward)
 
-    def _make_obs(self, reward=0.01, done=False):
+    def _make_obs(self, reward=0.1, done=False):
         return TicketSystemObservation(
             system_feedback=self.system_feedback,
             current_ticket_text=self.current_ticket_text,
