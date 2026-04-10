@@ -14,9 +14,11 @@ import textwrap
 import json
 from typing import List, Optional
 
+from openai import OpenAI
 from pydantic import ValidationError
 
 from models import TicketSystemAction
+from client import TicketSystemEnv
 from server.ticket_system_environment import TicketSystemEnvironment
 
 # Score bounds — strictly between 0 and 1 per platform requirements
