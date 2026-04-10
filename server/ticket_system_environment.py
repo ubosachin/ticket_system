@@ -153,6 +153,7 @@ class TicketSystemEnvironment(Environment):
         elif action.action_type == "reply_and_resolve":
             self.ticket_resolved = True
             done = True
+            self.system_feedback = "Ticket resolved and closed."
             
         else:
             self.system_feedback = f"Invalid action_type: {action.action_type}"
