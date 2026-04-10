@@ -20,13 +20,13 @@ The environment is built using the **OpenEnv Core** framework and consists of se
 ### B. Programmatic Rubric (`server/rubric.py`)
 - **Grading Logic**: Evaluates agent performance after every step.
 - **Reward Signals**:
-  - `0.10` baseline reward for starting the task (ensures non-zero score).
+  - `0.20` baseline reward for starting the task (ensures non-zero score).
   - `0.05` for reading the ticket.
   - `0.20` for searching for orders.
   - `0.20` for getting order status.
-  - `0.30` for issuing a refund (Hard task).
-  - `0.90` total max score for successfully resolving the ticket (strictly below 1.0).
-  - `-0.1` penalty for invalid actions or malformed JSON.
+  - `0.10` for issuing a refund (Hard task).
+  - `0.80` total max score for successfully resolving the ticket (strictly between 0 and 1).
+  - `0.0` or low penalty for invalid actions to stay in range.
 
 ### C. Models (`models.py`)
 - **TicketSystemAction**: Defines the schema for agent clicks and messages.
