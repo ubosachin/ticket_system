@@ -35,34 +35,34 @@ class TicketSystemRubric(Rubric):
             
         elif action_type == "search_orders" and not self.search_orders_rewarded:
             if observation.orders_found and observation.orders_found != "No orders found.":
-                if task_name in ["medium", "hard"]:
+                if task_name in ["medium", "ticket_medium", "hard", "ticket_hard"]:
                     reward = 0.2
                     self.search_orders_rewarded = True
                     
         elif action_type == "get_order_status" and not self.get_order_status_rewarded:
             if observation.order_status and observation.order_status != "Unknown":
-                if task_name in ["medium", "hard"]:
+                if task_name in ["medium", "ticket_medium", "hard", "ticket_hard"]:
                     reward = 0.2
                     self.get_order_status_rewarded = True
                     
         elif action_type == "issue_refund":
             if observation.refund_issued and not self.refund_issued:
                 self.refund_issued = True
-                reward = 0.3
+                reward = 0.1
                 
         elif action_type == "reply_and_resolve":
             self.ticket_resolved = True
-            if task_name == "easy":
+            if task_name in ["easy", "ticket_easy"]:
                 if "password" in msg_lower or "link" in msg_lower or "reset" in msg_lower:
-                    reward = 0.95 - self.current_reward
-            elif task_name == "medium":
+                    reward = 0.8 - self.current_reward
+            elif task_name in ["medium", "ticket_medium"]:
                 if "shipped" in msg_lower or "ord-789" in msg_lower:
-                    reward = 0.95 - self.current_reward
-            elif task_name == "hard":
+                    reward = 0.8 - self.current_reward
+            elif task_name in ["hard", "ticket_hard"]:
                 if self.refund_issued and ("refund" in msg_lower or "ord-111" in msg_lower):
-                    reward = 0.95 - self.current_reward
+                    reward = 0.8 - self.current_reward
         
         # Maximize and clamp reward
-        actual_reward = max(0.0, min(reward, 0.95 - self.current_reward))
+        actual_reward = max(0.0, min(reward, 0.8 - self.current_reward))
         self.current_reward += actual_reward
         return actual_reward

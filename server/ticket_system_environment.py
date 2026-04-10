@@ -37,14 +37,14 @@ class TicketSystemEnvironment(Environment):
         self.orders_found = ""
         self.order_status = ""
         self.system_feedback = "Welcome to the Ticket Support System."
-        self.max_reward = 0.95
+        self.max_reward = 0.8
         self.current_reward = 0.2
 
-        if self.task_name == "easy":
+        if self.task_name in ["easy", "ticket_easy"]:
             self.current_ticket_text = "I forgot my password, my username is CUST-123. Can you help?"
-        elif self.task_name == "medium":
+        elif self.task_name in ["medium", "ticket_medium"]:
             self.current_ticket_text = "Where is my order? I am CUST-456."
-        elif self.task_name == "hard":
+        elif self.task_name in ["hard", "ticket_hard"]:
             self.current_ticket_text = "I received a broken item for my recent order. I am CUST-999. I want a refund."
         else:
             # Default fallback
@@ -123,7 +123,7 @@ class TicketSystemEnvironment(Environment):
             if action.customer_id in ORDERS_DB:
                 self.orders_found = ORDERS_DB[action.customer_id]["order_id"]
                 self.system_feedback = f"Found order: {self.orders_found}"
-                if self.task_name in ["medium", "hard"]:
+                if self.task_name in ["medium", "ticket_medium", "hard", "ticket_hard"]:
                     reward = 0.2 # partial progress
             else:
                 self.orders_found = "No orders found."
@@ -136,17 +136,17 @@ class TicketSystemEnvironment(Environment):
                     self.order_status = details["status"]
                     self.system_feedback = f"Order status is {self.order_status}"
                     found = True
-                    if self.task_name in ["medium", "hard"]:
+                    if self.task_name in ["medium", "ticket_medium", "hard", "ticket_hard"]:
                         reward = 0.2 # partial progress
             if not found:
                 self.order_status = "Unknown"
                 self.system_feedback = "Order ID not found."
                 
         elif action.action_type == "issue_refund":
-            if action.order_id == "ORD-111" and self.task_name == "hard":
+            if action.order_id == "ORD-111" and self.task_name in ["hard", "ticket_hard"]:
                 self.refund_issued = True
                 self.system_feedback = "Refund issued for ORD-111."
-                reward = 0.3 # partial progress
+                reward = 0.1 # partial progress
             else:
                 self.system_feedback = "Cannot issue refund. Invalid Order ID or not permitted."
                 

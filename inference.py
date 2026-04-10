@@ -180,7 +180,8 @@ async def main() -> None:
                 break
 
         score = sum(rewards)
-        score = min(max(score, 0.0), 1.0)
+        # Ensure score is strictly between 0.1 and 0.9
+        score = min(max(score, 0.1), 0.9)
         success = score >= SUCCESS_SCORE_THRESHOLD
 
     finally:
