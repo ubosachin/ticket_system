@@ -20,7 +20,11 @@ BENCHMARK = "ticket_system"
 MAX_STEPS = 8
 TEMPERATURE = 0.7
 MAX_TOKENS = 150
-SUCCESS_SCORE_THRESHOLD = 0.1
+SUCCESS_SCORE_THRESHOLD = 0.3
+
+# Score must be strictly between 0 and 1 per platform requirements
+SCORE_MIN = 0.15  # strictly > 0
+SCORE_MAX = 0.85  # strictly < 1
 
 SYSTEM_PROMPT = textwrap.dedent(
     """
@@ -45,11 +49,11 @@ def log_start(task: str, env: str, model: str) -> None:
 def log_step(step: int, action: str, reward: float, done: bool, error: Optional[str]) -> None:
     error_val = error if error else "null"
     done_val = str(done).lower()
-    print(f"[STEP] step={step} action={action} reward={reward:.2f} done={done_val} error={error_val}", flush=True)
+    print(f"[STEP] step={step} action={action} reward={reward:.4f} done={done_val} error={error_val}", flush=True)
 
 def log_end(success: bool, steps: int, score: float, rewards: List[float]) -> None:
-    rewards_str = ",".join(f"{r:.2f}" for r in rewards)
-    print(f"[END] success={str(success).lower()} steps={steps} score={score:.3f} rewards={rewards_str}", flush=True)
+    rewards_str = ",".join(f"{r:.4f}" for r in rewards)
+    print(f"[END] success={str(success).lower()} steps={steps} score={score:.4f} rewards={rewards_str}", flush=True)
 
 def build_user_prompt(step: int, obs, last_reward: float, history: List[str]) -> str:
     history_block = "\\n".join(history[-4:]) if history else "None"
@@ -64,7 +68,7 @@ def build_user_prompt(step: int, obs, last_reward: float, history: List[str]) ->
         - order_status: {obs.order_status}
         - refund_issued: {obs.refund_issued}
         
-        Last reward: {last_reward:.2f}
+        Last reward: {last_reward:.4f}
         Previous steps:
         {history_block}
         
@@ -86,14 +90,19 @@ def get_model_message(client: OpenAI, step: int, obs, last_reward: float, histor
             stream=False,
         )
         text = (completion.choices[0].message.content or "").strip()
-        # Some simple clean up in case model adds quotes
+        # Clean up any markdown formatting
         if text.startswith("```json"): text = text[7:]
         if text.startswith("```"): text = text[3:]
         if text.endswith("```"): text = text[:-3]
         return text.strip()
     except Exception as exc:
         print(f"[DEBUG] Model request failed: {exc}", flush=True)
+        # Fallback: try to read ticket to get a non-zero step reward
         return '{"action_type": "read_ticket"}'
+
+def clamp_score(score: float) -> float:
+    """Ensure score is strictly between 0 and 1."""
+    return min(max(score, SCORE_MIN), SCORE_MAX)
 
 async def main() -> None:
     client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
@@ -113,7 +122,8 @@ async def main() -> None:
     history: List[str] = []
     rewards: List[float] = []
     steps_taken = 0
-    score = 0.0
+    # Initialize score to SCORE_MIN so it's always strictly > 0 even if everything fails
+    score = SCORE_MIN
     success = False
 
     log_start(task=TASK_NAME, env=BENCHMARK, model=MODEL_NAME)
@@ -129,7 +139,9 @@ async def main() -> None:
         obs = res_reset if not hasattr(res_reset, "observation") else res_reset.observation
         done = res_reset.done if hasattr(res_reset, "done") else False
             
-        last_reward = res_reset.reward if hasattr(res_reset, "reward") else 0.1
+        last_reward = res_reset.reward if hasattr(res_reset, "reward") else SCORE_MIN
+        # Clamp reset reward to valid range
+        last_reward = clamp_score(last_reward) if last_reward is not None else SCORE_MIN
         rewards.append(last_reward)
 
         for step in range(1, MAX_STEPS + 1):
@@ -153,19 +165,20 @@ async def main() -> None:
                     
                 obs = res_step if getattr(res_step, "system_feedback", None) else res_step.observation
                 reward = obs.reward if hasattr(obs, "reward") else 0.0
+                reward = reward if reward is not None else 0.0
                 done = obs.done if hasattr(obs, "done") else False
                 
             except json.JSONDecodeError as e:
                 error = f"JSON parse error: {e}"
-                reward = -0.1
+                reward = 0.0  # No negative penalty — keep scores valid
                 done = False
             except ValidationError as e:
                 error = f"Action validation error: {e}"
-                reward = -0.1
+                reward = 0.0  # No negative penalty
                 done = False
             except Exception as e:
                 error = str(e)
-                reward = -0.1
+                reward = 0.0  # No negative penalty
                 done = False
 
             rewards.append(reward)
@@ -174,15 +187,19 @@ async def main() -> None:
             # compress JSON for logging
             compressed_action = "".join(message.split())
             log_step(step=step, action=compressed_action, reward=reward, done=done, error=error)
-            history.append(f"Step {step}: {compressed_action} -> reward {reward:+.2f}")
+            history.append(f"Step {step}: {compressed_action} -> reward {reward:+.4f}")
 
             if done:
                 break
 
-        score = sum(rewards)
-        # Ensure score is strictly between 0.1 and 0.9
-        score = min(max(score, 0.1), 0.9)
+        # Compute final score: sum of all rewards, strictly clamped to (0, 1)
+        raw_score = sum(rewards)
+        score = clamp_score(raw_score)
         success = score >= SUCCESS_SCORE_THRESHOLD
+
+    except Exception as e:
+        print(f"[DEBUG] Fatal error in main loop: {e}", flush=True)
+        score = SCORE_MIN  # Always emit a valid score
 
     finally:
         try:

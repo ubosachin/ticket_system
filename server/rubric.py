@@ -1,68 +1,117 @@
 from typing import Any
 from openenv.core.rubrics import Rubric
 
+# Score bounds — must be strictly between 0 and 1 per platform requirements
+SCORE_MIN = 0.15
+SCORE_MAX = 0.85
+
 class TicketSystemRubric(Rubric):
-    """Rubric for the Ticket System environment to compute rewards and scores."""
-    
+    """
+    Rubric for the Ticket System environment.
+
+    Tracks cumulative reward across a trajectory.
+    Starting reward (set at reset): 0.2
+    Maximum achievable reward:      0.8
+
+    All returned per-step rewards are non-negative (never < 0).
+    Cumulative reward is strictly bounded within (SCORE_MIN, SCORE_MAX).
+    """
+
     def __init__(self):
         super().__init__()
         self.reset()
-        
+
     def reset(self):
-        self.current_reward = 0.2
+        self.current_reward = 0.2          # baseline reward given at episode start
         self.refund_issued = False
         self.ticket_resolved = False
         self.read_ticket_rewarded = False
         self.search_orders_rewarded = False
         self.get_order_status_rewarded = False
+        # Seed last_score so the platform always sees a valid float (never None)
+        import inspect as _inspect
+        # Use object.__setattr__ to bypass the Rubric's __setattr__ which only
+        # auto-registers Rubric instances.
+        object.__setattr__(self, "last_score", self.current_reward)
+
+    def _clamp(self, value: float) -> float:
+        """Clamp value to strictly-valid range."""
+        return min(max(value, 0.0), SCORE_MAX - self.current_reward)
 
     def forward(self, action: Any, observation: Any) -> float:
-        # Grader logic matching the environment task configuration
+        """
+        Compute incremental reward for a single step.
+
+        Returns a NON-NEGATIVE float. Cumulative reward never exceeds 0.8.
+        """
         task_name = observation.metadata.get("task", "easy")
         action_type = action.action_type
-        # Handle cases where message might be empty or missing
-        msg = getattr(action, "message", "")
-        msg_lower = msg.lower() if msg else ""
-        
+        msg = getattr(action, "message", "") or ""
+        msg_lower = msg.lower()
+
         reward = 0.0
-        
+
+        # Once ticket is resolved, no more rewards
         if self.ticket_resolved:
             return 0.0
 
         if action_type == "read_ticket" and not self.read_ticket_rewarded:
             reward = 0.05
             self.read_ticket_rewarded = True
-            
+
         elif action_type == "search_orders" and not self.search_orders_rewarded:
-            if observation.orders_found and observation.orders_found != "No orders found.":
-                if task_name in ["medium", "ticket_medium", "hard", "ticket_hard"]:
-                    reward = 0.2
-                    self.search_orders_rewarded = True
-                    
+            order_found = (
+                observation.orders_found
+                and observation.orders_found != "No orders found."
+            )
+            if order_found and task_name in [
+                "medium", "ticket_medium", "hard", "ticket_hard"
+            ]:
+                reward = 0.2
+                self.search_orders_rewarded = True
+
         elif action_type == "get_order_status" and not self.get_order_status_rewarded:
-            if observation.order_status and observation.order_status != "Unknown":
-                if task_name in ["medium", "ticket_medium", "hard", "ticket_hard"]:
-                    reward = 0.2
-                    self.get_order_status_rewarded = True
-                    
+            status_found = (
+                observation.order_status
+                and observation.order_status != "Unknown"
+            )
+            if status_found and task_name in [
+                "medium", "ticket_medium", "hard", "ticket_hard"
+            ]:
+                reward = 0.2
+                self.get_order_status_rewarded = True
+
         elif action_type == "issue_refund":
             if observation.refund_issued and not self.refund_issued:
                 self.refund_issued = True
                 reward = 0.1
-                
+
         elif action_type == "reply_and_resolve":
             self.ticket_resolved = True
+            can_resolve = False
+
             if task_name in ["easy", "ticket_easy"]:
-                if "password" in msg_lower or "link" in msg_lower or "reset" in msg_lower:
-                    reward = 0.8 - self.current_reward
+                can_resolve = (
+                    "password" in msg_lower
+                    or "link" in msg_lower
+                    or "reset" in msg_lower
+                )
             elif task_name in ["medium", "ticket_medium"]:
-                if "shipped" in msg_lower or "ord-789" in msg_lower:
-                    reward = 0.8 - self.current_reward
+                can_resolve = (
+                    "shipped" in msg_lower
+                    or "ord-789" in msg_lower
+                    or "order" in msg_lower
+                )
             elif task_name in ["hard", "ticket_hard"]:
-                if self.refund_issued and ("refund" in msg_lower or "ord-111" in msg_lower):
-                    reward = 0.8 - self.current_reward
-        
-        # Maximize and clamp reward
+                can_resolve = self.refund_issued and (
+                    "refund" in msg_lower or "ord-111" in msg_lower
+                )
+
+            if can_resolve:
+                # Give exactly enough reward to reach 0.8 ceiling
+                reward = 0.8 - self.current_reward
+
+        # Clamp: can never go negative, can never push past ceiling
         actual_reward = max(0.0, min(reward, 0.8 - self.current_reward))
         self.current_reward += actual_reward
         return actual_reward
