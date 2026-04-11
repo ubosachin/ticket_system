@@ -106,11 +106,11 @@ class TicketSystemRubric(Rubric):
                 )
 
             if can_resolve:
-                # Give enough reward to reach ~0.72 ceiling (strictly within range)
-                reward = max(0.0, 0.72 - self.current_reward)
+                # Give enough reward to reach ~0.75 ceiling (strictly within range)
+                reward = max(0.0, 0.75 - self.current_reward)
 
-        # Clamp: can never go negative, can never push past 0.72 ceiling
-        actual_reward = max(0.0, min(reward, 0.72 - self.current_reward))
+        # Clamp: can never go negative, can never push past 0.75 ceiling
+        actual_reward = max(0.0, min(reward, 0.75 - self.current_reward))
         self.current_reward += actual_reward
         # Update last_score to track cumulative score for platform validation
         # CRITICAL: Set to current_reward so validator sees correct cumulative score

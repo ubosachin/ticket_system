@@ -164,6 +164,7 @@ class TicketSystemEnvironment(Environment):
         reward = self._apply_rubric(action, self._make_obs(reward=0.0, done=done))
         # Environment's current_reward tracks total for state consistency
         self.current_reward += reward
+
         
         # CRITICAL: Update last_score to cumulative reward AFTER rubric forward
         # The rubric's parent class overwrites last_score, so we set it here
