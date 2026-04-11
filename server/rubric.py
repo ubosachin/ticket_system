@@ -11,7 +11,7 @@ class TicketSystemRubric(Rubric):
 
     Tracks cumulative reward across a trajectory.
     Starting reward (set at reset): 0.2
-    Maximum achievable reward:      0.8
+    Maximum achievable reward:      0.72
 
     All returned per-step rewards are non-negative (never < 0).
     Cumulative reward is strictly bounded within (SCORE_MIN, SCORE_MAX).
@@ -29,10 +29,8 @@ class TicketSystemRubric(Rubric):
         self.search_orders_rewarded = False
         self.get_order_status_rewarded = False
         # Seed last_score so the platform always sees a valid float (never None)
-        import inspect as _inspect
-        # Use object.__setattr__ to bypass the Rubric's __setattr__ which only
-        # auto-registers Rubric instances.
-        object.__setattr__(self, "last_score", self.current_reward)
+        # Use cumulative reward, not per-step
+        object.__setattr__(self, "last_score", 0.2)
 
     def _clamp(self, value: float) -> float:
         """Clamp value to strictly-valid range."""
@@ -111,9 +109,10 @@ class TicketSystemRubric(Rubric):
                 # Give enough reward to reach ~0.72 ceiling (strictly within range)
                 reward = max(0.0, 0.72 - self.current_reward)
 
-        # Clamp: can never go negative, can never push past 0.85 ceiling
-        actual_reward = max(0.0, min(reward, SCORE_MAX - self.current_reward))
+        # Clamp: can never go negative, can never push past 0.72 ceiling
+        actual_reward = max(0.0, min(reward, 0.72 - self.current_reward))
         self.current_reward += actual_reward
         # Update last_score to track cumulative score for platform validation
+        # CRITICAL: Set to current_reward so validator sees correct cumulative score
         object.__setattr__(self, "last_score", self.current_reward)
         return actual_reward
