@@ -42,7 +42,7 @@ class TicketSystemRubric(Rubric):
         """
         Compute incremental reward for a single step.
 
-        Returns a NON-NEGATIVE float. Cumulative reward never exceeds 0.8.
+        Returns a NON-NEGATIVE float. Cumulative reward stays strictly within (0.15, 0.85).
         """
         task_name = observation.metadata.get("task", "easy")
         action_type = action.action_type
@@ -67,7 +67,7 @@ class TicketSystemRubric(Rubric):
             if order_found and task_name in [
                 "medium", "ticket_medium", "hard", "ticket_hard"
             ]:
-                reward = 0.2
+                reward = 0.15
                 self.search_orders_rewarded = True
 
         elif action_type == "get_order_status" and not self.get_order_status_rewarded:
@@ -78,13 +78,13 @@ class TicketSystemRubric(Rubric):
             if status_found and task_name in [
                 "medium", "ticket_medium", "hard", "ticket_hard"
             ]:
-                reward = 0.2
+                reward = 0.15
                 self.get_order_status_rewarded = True
 
         elif action_type == "issue_refund":
             if observation.refund_issued and not self.refund_issued:
                 self.refund_issued = True
-                reward = 0.1
+                reward = 0.08
 
         elif action_type == "reply_and_resolve":
             self.ticket_resolved = True
@@ -108,10 +108,10 @@ class TicketSystemRubric(Rubric):
                 )
 
             if can_resolve:
-                # Give exactly enough reward to reach 0.8 ceiling
-                reward = 0.8 - self.current_reward
+                # Give enough reward to reach ~0.72 ceiling (strictly within range)
+                reward = max(0.0, 0.72 - self.current_reward)
 
-        # Clamp: can never go negative, can never push past ceiling
-        actual_reward = max(0.0, min(reward, 0.8 - self.current_reward))
+        # Clamp: can never go negative, can never push past 0.85 ceiling
+        actual_reward = max(0.0, min(reward, SCORE_MAX - self.current_reward))
         self.current_reward += actual_reward
         return actual_reward
