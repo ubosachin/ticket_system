@@ -28,9 +28,8 @@ BENCHMARK = "ticket_system"
 # All graded tasks as defined in openenv.yaml
 ALL_TASKS = ["ticket_easy", "ticket_medium", "ticket_hard"]
 
-# If MY_ENV_TASK is set, run only that task; otherwise run all
-_env_task = os.getenv("MY_ENV_TASK", "")
-TASKS_TO_RUN = [_env_task] if _env_task else ALL_TASKS
+# Always run all tasks for hackathon evaluation
+TASKS_TO_RUN = ALL_TASKS
 
 
 def log_start(task: str) -> None:
