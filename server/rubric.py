@@ -6,8 +6,8 @@ SCORE_MIN = 0.01  # Never exactly 0.0
 SCORE_MAX = 0.99  # Never exactly 1.0
 
 def clamp_score(s: float) -> float:
-    """Clamp score to strictly-valid (0, 1) range with epsilon margins."""
-    return max(0.01, min(0.99, round(s, 4)))
+    """Force score into open interval (0.01, 0.99). Applied at EVERY public return point."""
+    return round(max(0.01, min(0.99, s)), 4)
 
 class TicketSystemRubric(Rubric):
     """

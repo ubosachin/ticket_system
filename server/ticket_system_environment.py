@@ -162,22 +162,22 @@ class TicketSystemEnvironment(Environment):
             self.system_feedback = f"Invalid action_type: {action.action_type}"
 
         # Grading logic using the rubric
-        reward = self._apply_rubric(action, self._make_obs(reward=0.0, done=done))
+        raw_reward = self._apply_rubric(action, self._make_obs(reward=0.0, done=done))
         # Environment's current_reward tracks total for state consistency
-        self.current_reward += reward
+        self.current_reward += raw_reward
         
-        # CRITICAL: Update last_score to cumulative reward AFTER rubric forward
-        # The rubric's parent class overwrites last_score, so we set it here
-        clamped = clamp_score(self.current_reward)
-        object.__setattr__(self.rubric, "last_score", clamped)
-        object.__setattr__(self.rubric, "score", clamped)
+        # CRITICAL: Clamp BEFORE returning in StepResult
+        # This ensures the HTTP response body never contains exactly 0.0 or 1.0
+        reward_clamped = clamp_score(self.current_reward)
+        object.__setattr__(self.rubric, "last_score", reward_clamped)
+        object.__setattr__(self.rubric, "score", reward_clamped)
 
         if self._state.step_count >= 10:
             done = True
             self.system_feedback = "Max steps reached."
 
-        # Return observation with CLAMPED cumulative reward
-        return self._make_obs(reward=clamp_score(self.current_reward), done=done)
+        # Return observation with CLAMPED cumulative reward (never 0.0 or 1.0 exactly)
+        return self._make_obs(reward=reward_clamped, done=done)
     
     @property
     def state(self) -> State:
