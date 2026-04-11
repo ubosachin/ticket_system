@@ -124,6 +124,7 @@ def run_task(task: str) -> float:
     steps_taken = 0
     score = SCORE_MIN
     success = False
+    final_reward = None
 
     log_start(task)
 
@@ -133,6 +134,7 @@ def run_task(task: str) -> float:
         reset_reward = obs.reward if hasattr(obs, "reward") else SCORE_MIN
         reset_reward = reset_reward if reset_reward is not None else SCORE_MIN
         rewards.append(reset_reward)
+        final_reward = reset_reward
 
         planned_actions = get_rule_based_actions(task)
 
@@ -149,6 +151,7 @@ def run_task(task: str) -> float:
                 reward = obs.reward if hasattr(obs, "reward") else 0.0
                 reward = reward if reward is not None else 0.0
                 done = obs.done if hasattr(obs, "done") else False
+                final_reward = reward  # Track the final cumulative reward
             except ValidationError as e:
                 error = f"ValidationError: {e}"
                 reward = 0.0
@@ -166,7 +169,8 @@ def run_task(task: str) -> float:
             if done:
                 break
 
-        raw_score = sum(rewards)
+        # Use the final cumulative reward, not the sum
+        raw_score = final_reward if final_reward is not None else SCORE_MIN
         score = clamp(raw_score)
         success = score >= 0.3
 

@@ -169,7 +169,8 @@ class TicketSystemEnvironment(Environment):
             done = True
             self.system_feedback = "Max steps reached."
 
-        return self._make_obs(reward=reward, done=done)
+        # Return observation with CUMULATIVE reward (not just per-step)
+        return self._make_obs(reward=self.current_reward, done=done)
 
     @property
     def state(self) -> State:
