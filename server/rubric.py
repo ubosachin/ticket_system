@@ -2,8 +2,12 @@ from typing import Any
 from openenv.core.rubrics import Rubric
 
 # Score bounds — must be strictly between 0 and 1 per platform requirements
-SCORE_MIN = 0.15
-SCORE_MAX = 0.85
+SCORE_MIN = 0.01  # Never exactly 0.0
+SCORE_MAX = 0.99  # Never exactly 1.0
+
+def clamp_score(s: float) -> float:
+    """Clamp score to strictly-valid (0, 1) range with epsilon margins."""
+    return max(0.01, min(0.99, round(s, 4)))
 
 class TicketSystemRubric(Rubric):
     """
@@ -22,16 +26,15 @@ class TicketSystemRubric(Rubric):
         self.reset()
 
     def reset(self):
-        self.current_reward = 0.2          # baseline reward given at episode start
+        self.current_reward = 0.5          # start in middle of valid range
         self.refund_issued = False
         self.ticket_resolved = False
         self.read_ticket_rewarded = False
         self.search_orders_rewarded = False
         self.get_order_status_rewarded = False
-        # Seed last_score so the platform always sees a valid float (never None)
-        # Use cumulative reward, not per-step
-        object.__setattr__(self, "last_score", 0.2)
-        object.__setattr__(self, "score", 0.2)
+        # Seed last_score with clamped value
+        object.__setattr__(self, "last_score", clamp_score(0.5))
+        object.__setattr__(self, "score", clamp_score(0.5))
     
     def get_score(self) -> float:
         """Return the current cumulative score."""
@@ -111,24 +114,16 @@ class TicketSystemRubric(Rubric):
                 )
 
             if can_resolve:
-                # Give enough reward to reach ~0.75 ceiling (strictly within range)
+                # Give enough reward to reach valid range (0.01, 0.99)
                 reward = max(0.0, 0.75 - self.current_reward)
 
-        # Clamp: can never go negative, can never push past 0.75 ceiling
-        actual_reward = max(0.0, min(reward, 0.75 - self.current_reward))
+        # Clamp: can never go negative, can never exceed ceiling
+        actual_reward = max(0.0, min(reward, 0.99 - self.current_reward))
         self.current_reward += actual_reward
-        # Update last_score to track cumulative score for platform validation
-        # CRITICAL: Set to current_reward so validator sees correct cumulative score
-        object.__setattr__(self, "last_score", self.current_reward)
-        # Also ensure score property is updated
-        object.__setattr__(self, "score", self.current_reward)
         
-        # Hard fail-safe: ensure cumulative score is ALWAYS valid (0, 1)
-        if not (0 < self.current_reward < 1):
-            # Force to safe value
-            safe_reward = max(0.15, min(0.75, self.current_reward))
-            self.current_reward = safe_reward
-            object.__setattr__(self, "last_score", safe_reward)
-            object.__setattr__(self, "score", safe_reward)
+        # Update scores with strict clamping - never exactly 0.0 or 1.0
+        clamped_score = clamp_score(self.current_reward)
+        object.__setattr__(self, "last_score", clamped_score)
+        object.__setattr__(self, "score", clamped_score)
         
         return actual_reward

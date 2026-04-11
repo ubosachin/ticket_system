@@ -17,7 +17,7 @@ ORDERS_DB = {
     "CUST-999": {"order_id": "ORD-111", "status": "Delivered", "item": "Vase"}
 }
 
-from .rubric import TicketSystemRubric
+from .rubric import TicketSystemRubric, clamp_score
 
 class TicketSystemEnvironment(Environment):
     SUPPORTS_CONCURRENT_SESSIONS: bool = True
@@ -74,7 +74,8 @@ class TicketSystemEnvironment(Environment):
         self._reset_rubric()
         # Ensure the rubric matches the environment's initial reward
         self.rubric.current_reward = self.current_reward
-        return self._make_obs(reward=self.current_reward)
+        # Return observation with CLAMPED reward (never exactly 0.0 or 1.0)
+        return self._make_obs(reward=clamp_score(self.current_reward))
 
     def _make_obs(self, reward=None, done=False):
         if reward is None:
@@ -164,19 +165,20 @@ class TicketSystemEnvironment(Environment):
         reward = self._apply_rubric(action, self._make_obs(reward=0.0, done=done))
         # Environment's current_reward tracks total for state consistency
         self.current_reward += reward
-
-
+        
         # CRITICAL: Update last_score to cumulative reward AFTER rubric forward
         # The rubric's parent class overwrites last_score, so we set it here
-        object.__setattr__(self.rubric, "last_score", self.current_reward)
+        clamped = clamp_score(self.current_reward)
+        object.__setattr__(self.rubric, "last_score", clamped)
+        object.__setattr__(self.rubric, "score", clamped)
 
         if self._state.step_count >= 10:
             done = True
             self.system_feedback = "Max steps reached."
 
-        # Return observation with CUMULATIVE reward (not just per-step)
-        return self._make_obs(reward=self.current_reward, done=done)
-
+        # Return observation with CLAMPED cumulative reward
+        return self._make_obs(reward=clamp_score(self.current_reward), done=done)
+    
     @property
     def state(self) -> State:
         return self._state

@@ -18,6 +18,7 @@ from pydantic import ValidationError
 
 from models import TicketSystemAction
 from server.ticket_system_environment import TicketSystemEnvironment
+from server.rubric import clamp_score
 
 # Score bounds — strictly between 0 and 1 per platform requirements
 SCORE_MIN = 0.15   # always above 0.0
@@ -57,8 +58,8 @@ def log_end(task: str, success: bool, steps: int, score: float,
 
 
 def clamp(value: float) -> float:
-    """Clamp to strictly-valid (0, 1) range."""
-    return min(max(value, SCORE_MIN), SCORE_MAX)
+    """Clamp to strictly-valid (0, 1) range with epsilon."""
+    return clamp_score(value)
 
 
 def get_rule_based_actions(task: str) -> List[dict]:
