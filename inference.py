@@ -39,19 +39,19 @@ def log_start(task: str) -> None:
 def log_step(step: int, action: str, reward: float, done: bool,
              error: Optional[str]) -> None:
     err = error if error else "null"
+    # Use 2 decimal places to keep lines short
     print(
-        f"[STEP] step={step} action={action} reward={reward:.4f} "
-        f"done={str(done).lower()} error={err}",
+        f"[STEP] step={step} reward={reward:.2f} done={str(done).lower()} error={err}",
         flush=True,
     )
 
 
 def log_end(task: str, success: bool, steps: int, score: float,
             rewards: List[float]) -> None:
-    rewards_str = ",".join(f"{r:.4f}" for r in rewards)
+    # Use only 2 decimal places to keep output shorter and prevent line wrapping
+    rewards_str = ",".join(f"{r:.2f}" for r in rewards)
     print(
-        f"[END] task={task} success={str(success).lower()} steps={steps} "
-        f"score={score:.4f} rewards={rewards_str}",
+        f"[END] task={task} success={str(success).lower()} steps={steps} score={score:.2f} rewards={rewards_str}",
         flush=True,
     )
 
