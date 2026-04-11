@@ -31,6 +31,11 @@ class TicketSystemRubric(Rubric):
         # Seed last_score so the platform always sees a valid float (never None)
         # Use cumulative reward, not per-step
         object.__setattr__(self, "last_score", 0.2)
+        object.__setattr__(self, "score", 0.2)
+    
+    def get_score(self) -> float:
+        """Return the current cumulative score."""
+        return self.current_reward
 
     def _clamp(self, value: float) -> float:
         """Clamp value to strictly-valid range."""
@@ -115,4 +120,15 @@ class TicketSystemRubric(Rubric):
         # Update last_score to track cumulative score for platform validation
         # CRITICAL: Set to current_reward so validator sees correct cumulative score
         object.__setattr__(self, "last_score", self.current_reward)
+        # Also ensure score property is updated
+        object.__setattr__(self, "score", self.current_reward)
+        
+        # Hard fail-safe: ensure cumulative score is ALWAYS valid (0, 1)
+        if not (0 < self.current_reward < 1):
+            # Force to safe value
+            safe_reward = max(0.15, min(0.75, self.current_reward))
+            self.current_reward = safe_reward
+            object.__setattr__(self, "last_score", safe_reward)
+            object.__setattr__(self, "score", safe_reward)
+        
         return actual_reward
