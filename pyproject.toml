@@ -41,5 +41,3 @@ server = "ticket_system.server.app:main"
 
 [tool.setuptools]
 include-package-data = true
-packages = ["ticket_system", "ticket_system.server"]
-package-dir = { "ticket_system" = ".", "ticket_system.server" = "server" }
