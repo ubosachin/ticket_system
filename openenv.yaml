@@ -10,11 +10,20 @@ tasks:
     name: Easy Support Task
     description: Handle a simple password reset request.
     grader: true
+    grader_config:
+      score_min: 0.0
+      score_max: 1.0
   - id: ticket_medium
     name: Medium Support Task
     description: Track an order for a customer.
     grader: true
+    grader_config:
+      score_min: 0.0
+      score_max: 1.0
   - id: ticket_hard
     name: Hard Support Task
     description: Issue a refund for a damaged item.
     grader: true
+    grader_config:
+      score_min: 0.0
+      score_max: 1.0
