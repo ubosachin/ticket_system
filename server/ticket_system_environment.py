@@ -76,7 +76,9 @@ class TicketSystemEnvironment(Environment):
         self.rubric.current_reward = self.current_reward
         return self._make_obs(reward=self.current_reward)
 
-    def _make_obs(self, reward=0.2, done=False):
+    def _make_obs(self, reward=None, done=False):
+        if reward is None:
+            reward = self.current_reward
         return TicketSystemObservation(
             system_feedback=self.system_feedback,
             current_ticket_text=self.current_ticket_text,
