@@ -165,7 +165,7 @@ class TicketSystemEnvironment(Environment):
         # Environment's current_reward tracks total for state consistency
         self.current_reward += reward
 
-        
+
         # CRITICAL: Update last_score to cumulative reward AFTER rubric forward
         # The rubric's parent class overwrites last_score, so we set it here
         object.__setattr__(self.rubric, "last_score", self.current_reward)
@@ -180,3 +180,15 @@ class TicketSystemEnvironment(Environment):
     @property
     def state(self) -> State:
         return self._state
+    
+    def get_grader(self):
+        """Explicitly expose rubric/grader."""
+        return self.rubric
+    
+    def get_task_scores(self):
+        """Get all task scores."""
+        return {
+            "task": self.task_name,
+            "score": self.rubric.current_reward,
+            "last_score": self.rubric.last_score,
+        }
