@@ -114,4 +114,6 @@ class TicketSystemRubric(Rubric):
         # Clamp: can never go negative, can never push past 0.85 ceiling
         actual_reward = max(0.0, min(reward, SCORE_MAX - self.current_reward))
         self.current_reward += actual_reward
+        # Update last_score to track cumulative score for platform validation
+        object.__setattr__(self, "last_score", self.current_reward)
         return actual_reward
